@@ -1,4 +1,6 @@
-﻿using System;
+﻿using CefSharp;
+using CefSharp.WinForms;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -15,9 +17,17 @@ namespace YoutubeQ
     public partial class Form1 : Form
     {
         bool playing = false;
+        private ChromiumWebBrowser chromiumWebBrowser1 = null;
+
         public Form1()
         {
             InitializeComponent();
+            var settings = new CefSettings();
+            settings.CefCommandLineArgs.Add("disable-gpu", "1"); //since geforce experice this i am gaming LUL
+            settings.CefCommandLineArgs["autoplay-policy"] = "no-user-gesture-required";
+            settings.CefCommandLineArgs.Add("enable-media-stream", "1");
+            settings.CefCommandLineArgs["autoplay-policy"] = "no-user-gesture-required";
+            Cef.Initialize(settings);     
         }
 
         public void nowPlaying()
@@ -57,7 +67,7 @@ namespace YoutubeQ
             try
             {
                 string link = (string)e.Data.GetData(DataFormats.Text);                
-                addToListView(link);
+                addToListView(link,true);
             }
             catch (Exception) { throw; }
            
@@ -94,6 +104,7 @@ namespace YoutubeQ
 
         private void button1_Click(object sender, EventArgs e)
         {
+            chromiumWebBrowser1.Focus();
             writeLinks();
             if (listView1.Items.Count > 0)
             {
@@ -101,7 +112,8 @@ namespace YoutubeQ
                 YoutubeLink link = (YoutubeLink)listView1.Items[0].Tag;
                 timer1.Interval = link.getDuration();
                 timer1.Start();
-                chromiumWebBrowser1.Load(link.getUrl());                
+                chromiumWebBrowser1.Load(link.getUrl());
+                chromiumWebBrowser1.Focus();
             }           
         }
 
@@ -151,8 +163,13 @@ namespace YoutubeQ
         }
 
         private void Form1_Load(object sender, EventArgs e)
-        {
+        {                    
             readAllLink();
+            chromiumWebBrowser1 = new CefSharp.WinForms.ChromiumWebBrowser("about:blank");
+            chromiumWebBrowser1.Dock = DockStyle.Fill;
+            chromiumWebBrowser1.BringToFront();            
+            this.Controls.Add(chromiumWebBrowser1);
+            chromiumWebBrowser1.Visible = false;
         }
 
         private void writeLinks()
@@ -172,19 +189,21 @@ namespace YoutubeQ
                 string[] list = System.IO.File.ReadAllLines("videolist.txt");
                 foreach (string item in list)
                 {
-                    addToListView(item);
+                    addToListView(item,false);
                 }
             }
         }
-        private void addToListView(string url)
-        {
-            YoutubeLink video = new YoutubeLink(url);
+        private void addToListView(string url, bool dragged)
+        {           
+            YoutubeLink video = new YoutubeLink(url, dragged);
             ListViewItem list = new ListViewItem();
             list.Text = video.getTitle();
-            list.Tag = video;
-            listView1.Items.Add(list);
-            listView1.Update();
-            listView1.Refresh();
+            if (!list.Text.Equals("ERROR")){
+                list.Tag = video;
+                listView1.Items.Add(list);
+                listView1.Update();
+                listView1.Refresh();           
+            }                             
         }
 
         private void button6_Click(object sender, EventArgs e)
@@ -237,13 +256,7 @@ namespace YoutubeQ
 
         private void timer1_Tick(object sender, EventArgs e)
         {
-            playNext();
-            
-        }
-
-        private void chromiumWebBrowser1_LoadingStateChanged(object sender, CefSharp.LoadingStateChangedEventArgs e)
-        {
-            SendKeys.Send("{ENTER}");
+            playNext();            
         }
     }
 
@@ -253,9 +266,17 @@ namespace YoutubeQ
         private string url;
         private string title;
         private int duration;
-        public YoutubeLink(string url)
+        public YoutubeLink(string urlstring, bool dragged)
         {
-            this.url = convertLink(url);
+            if (dragged)
+            {
+                url = convertLink(urlstring);
+            }
+            else
+            {
+                url = urlstring;
+            }            
+            Clipboard.SetText(this.url);
             title = generateTitle(this.url);
         }
         public string generateTitle(string link)
@@ -266,10 +287,15 @@ namespace YoutubeQ
               
                 data = web1.DownloadString(link);
             }
-            //getDuration(data);
-            data = regx.Match(data).Value;
-            data = data.Split('\"')[4].Replace('\\',' ');
-            return data;     
+            string title = regx.Match(data).Value;
+            if (title.Equals(""))
+            {
+                MessageBox.Show("Sorry this video cant be embed as per the uplaoder.");
+                return "ERROR";
+            }
+            title = title.Split('\"')[4].Replace('\\',' ');
+            getDuration(data);
+            return title;     
         }
         private void getDuration(string data )
         {           
@@ -282,8 +308,9 @@ namespace YoutubeQ
         }
         public string convertLink(string link)
         {
-            return link.Replace("watch?v=", "embed/") + "?autoplay=1";
-           //     link = link.Replace("watch?v=", "embed/");
+            string result = link.Replace("watch?v=", "embed/");
+            result = result+ "?autoplay=1";
+            return result;
         }
         public string getUrl()
         {
