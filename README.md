@@ -5,7 +5,7 @@ Let you drag and drop videos and make queue of youtube videos and saves it and l
 
 ![how to use](https://github.com/00000vish/Youtube-Queue/blob/master/YoutubeQ/3jPQDDu.gif?raw=true)
 
-![one](https://imgur.com/iZHO0PY.png)
+![one](https://imgur.com/SHeUiTs.png)
 
 ![dua](https://imgur.com/5Wf5g47.png)
 
