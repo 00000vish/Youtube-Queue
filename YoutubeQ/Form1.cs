@@ -4,7 +4,9 @@ using System.ComponentModel;
 using System.Data;
 using System.Drawing;
 using System.Linq;
+using System.Net;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -13,7 +15,6 @@ namespace YoutubeQ
     public partial class Form1 : Form
     {
         bool playing = false;
-        bool autoPlay = true;
         public Form1()
         {
             InitializeComponent();
@@ -25,6 +26,8 @@ namespace YoutubeQ
             chromiumWebBrowser1.Visible = true;
             button4.Visible = true;
             button5.Visible = true;
+            button6.Visible = false;
+            button7.Visible = false;
             listView1.Visible = false;
             button1.Visible = false;    
             button2.Visible = false;    
@@ -33,6 +36,9 @@ namespace YoutubeQ
         }
         public void stopPlaying()
         {
+            timer1.Stop();
+            button6.Visible = true;
+            button7.Visible = true;
             button4.Visible = false;
             button5.Visible = false;
             listView1.Visible = true;
@@ -44,40 +50,28 @@ namespace YoutubeQ
             chromiumWebBrowser1.Load("about:blank");
             chromiumWebBrowser1.Visible = false;
         }
-
-        public string convertLink(string link)
-        {
-            if (autoPlay)
-            {
-                link = link.Replace("watch?v=", "embed/") + "?autoplay=1";
-            }
-            else
-            {
-                link = link.Replace("watch?v=", "embed/");
-                Clipboard.SetText(link);
-            }
-            return link;
-        }
+        
 
         private void Form1_DragDrop(object sender, DragEventArgs e)
         {
             try
             {
-                listView1.Items.Add(convertLink((string)e.Data.GetData(DataFormats.Text)));
+                string link = (string)e.Data.GetData(DataFormats.Text);                
+                addToListView(link);
             }
-            catch (Exception){}
+            catch (Exception) { throw; }
+           
+                
         }
 
         private void Form1_DragEnter(object sender, DragEventArgs e)
         {
             if (e.Data.GetDataPresent(DataFormats.Text) && (e.AllowedEffect & DragDropEffects.Copy) != 0)
             {
-                // Allow this.
                 e.Effect = DragDropEffects.Copy;
             }
             else
             {
-                // Don't allow any other drop.
                 e.Effect = DragDropEffects.None;
             }
         }
@@ -104,7 +98,10 @@ namespace YoutubeQ
             if (listView1.Items.Count > 0)
             {
                 nowPlaying();
-                chromiumWebBrowser1.Load(listView1.Items[0].Text);                
+                YoutubeLink link = (YoutubeLink)listView1.Items[0].Tag;
+                timer1.Interval = link.getDuration();
+                timer1.Start();
+                chromiumWebBrowser1.Load(link.getUrl());                
             }           
         }
 
@@ -150,18 +147,7 @@ namespace YoutubeQ
 
         private void button4_Click(object sender, EventArgs e)
         {
-            if (listView1.Items.Count > 0)
-            {
-                listView1.Items.RemoveAt(0);
-                if (listView1.Items.Count > 0)
-                {
-                    chromiumWebBrowser1.Load(listView1.Items[0].Text);
-                }
-                else
-                {
-                    stopPlaying();
-                }
-            }
+            playNext();
         }
 
         private void Form1_Load(object sender, EventArgs e)
@@ -174,7 +160,8 @@ namespace YoutubeQ
             string links ="";
             foreach (ListViewItem item in listView1.Items)
             {
-                links += item.Text + "\n";  
+                YoutubeLink link = (YoutubeLink)item.Tag;
+                links += link.getUrl() + "\n";  
             }
             System.IO.File.WriteAllText("videolist.txt", links);
         }
@@ -185,9 +172,131 @@ namespace YoutubeQ
                 string[] list = System.IO.File.ReadAllLines("videolist.txt");
                 foreach (string item in list)
                 {
-                    listView1.Items.Add(item);
+                    addToListView(item);
                 }
             }
         }
+        private void addToListView(string url)
+        {
+            YoutubeLink video = new YoutubeLink(url);
+            ListViewItem list = new ListViewItem();
+            list.Text = video.getTitle();
+            list.Tag = video;
+            listView1.Items.Add(list);
+            listView1.Update();
+            listView1.Refresh();
+        }
+
+        private void button6_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                ListViewItem select = listView1.SelectedItems[0];
+                int index = listView1.Items.IndexOf(select);
+                listView1.Items.Remove(select);
+                listView1.Items.Insert(index-1, select);
+                listView1.Update();
+                listView1.Refresh();
+                writeLinks();
+            }
+            catch (Exception) {}
+        }
+
+        private void button7_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                ListViewItem select = listView1.SelectedItems[0];
+                int index = listView1.Items.IndexOf(select);
+                listView1.Items.Remove(select);
+                listView1.Items.Insert(index + 1, select);
+                listView1.Update();
+                listView1.Refresh();
+                writeLinks();
+            }
+            catch (Exception) { }
+        }
+
+        private void playNext()
+        {
+            if (listView1.Items.Count > 0)
+            {
+                listView1.Items.RemoveAt(0);
+                if (listView1.Items.Count > 0)
+                {
+                    YoutubeLink link = (YoutubeLink)listView1.Items[0].Tag;
+                    timer1.Interval = link.getDuration();
+                    chromiumWebBrowser1.Load(link.getUrl());
+                }
+                else
+                {
+                    stopPlaying();
+                }
+            }
+        }
+
+        private void timer1_Tick(object sender, EventArgs e)
+        {
+            playNext();
+            
+        }
+
+        private void chromiumWebBrowser1_LoadingStateChanged(object sender, CefSharp.LoadingStateChangedEventArgs e)
+        {
+            SendKeys.Send("{ENTER}");
+        }
     }
+
+
+    public class YoutubeLink
+    {
+        private string url;
+        private string title;
+        private int duration;
+        public YoutubeLink(string url)
+        {
+            this.url = convertLink(url);
+            title = generateTitle(this.url);
+        }
+        public string generateTitle(string link)
+        {
+            string data;
+            Regex regx = new Regex("runs(.*?)defaultThumbnail", RegexOptions.IgnoreCase);
+            using (WebClient web1 = new WebClient()) {
+              
+                data = web1.DownloadString(link);
+            }
+            //getDuration(data);
+            data = regx.Match(data).Value;
+            data = data.Split('\"')[4].Replace('\\',' ');
+            return data;     
+        }
+        private void getDuration(string data )
+        {           
+            Regex regx = new Regex("videoDurationSeconds(.*?)webPlayerActionsPorting", RegexOptions.IgnoreCase);
+            string temp = regx.Match(data).Value;
+            temp = temp.Split('\"')[2].Replace('\\', ' ');
+            int seconds;
+            int.TryParse(temp, out seconds);
+            duration = seconds*1000;
+        }
+        public string convertLink(string link)
+        {
+            return link.Replace("watch?v=", "embed/") + "?autoplay=1";
+           //     link = link.Replace("watch?v=", "embed/");
+        }
+        public string getUrl()
+        {
+            return url;
+        }
+        public string getTitle()
+        {
+            return title;
+        }
+        public int  getDuration()
+        {
+            return duration;
+        }
+    }
+
 }

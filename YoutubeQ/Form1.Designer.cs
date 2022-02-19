@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form1));
             this.listView1 = new System.Windows.Forms.ListView();
             this.columnHeader1 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
@@ -38,6 +39,9 @@
             this.button5 = new System.Windows.Forms.Button();
             this.checkBox1 = new System.Windows.Forms.CheckBox();
             this.chromiumWebBrowser1 = new CefSharp.WinForms.ChromiumWebBrowser();
+            this.button6 = new System.Windows.Forms.Button();
+            this.button7 = new System.Windows.Forms.Button();
+            this.timer1 = new System.Windows.Forms.Timer(this.components);
             this.SuspendLayout();
             // 
             // listView1
@@ -52,7 +56,7 @@
             this.listView1.HideSelection = false;
             this.listView1.Location = new System.Drawing.Point(12, 12);
             this.listView1.Name = "listView1";
-            this.listView1.Size = new System.Drawing.Size(507, 422);
+            this.listView1.Size = new System.Drawing.Size(736, 422);
             this.listView1.TabIndex = 1;
             this.listView1.UseCompatibleStateImageBehavior = false;
             this.listView1.View = System.Windows.Forms.View.Details;
@@ -67,33 +71,33 @@
             // button1
             // 
             this.button1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.button1.Location = new System.Drawing.Point(535, 12);
+            this.button1.Location = new System.Drawing.Point(753, 253);
             this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(236, 104);
+            this.button1.Size = new System.Drawing.Size(34, 31);
             this.button1.TabIndex = 2;
-            this.button1.Text = "Play";
+            this.button1.Text = "▶";
             this.button1.UseVisualStyleBackColor = true;
             this.button1.Click += new System.EventHandler(this.button1_Click);
             // 
             // button2
             // 
             this.button2.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.button2.Location = new System.Drawing.Point(535, 122);
+            this.button2.Location = new System.Drawing.Point(753, 79);
             this.button2.Name = "button2";
-            this.button2.Size = new System.Drawing.Size(236, 104);
+            this.button2.Size = new System.Drawing.Size(34, 31);
             this.button2.TabIndex = 3;
-            this.button2.Text = "Remove";
+            this.button2.Text = "❌";
             this.button2.UseVisualStyleBackColor = true;
             this.button2.Click += new System.EventHandler(this.button2_Click);
             // 
             // button3
             // 
             this.button3.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.button3.Location = new System.Drawing.Point(535, 233);
+            this.button3.Location = new System.Drawing.Point(753, 216);
             this.button3.Name = "button3";
-            this.button3.Size = new System.Drawing.Size(236, 104);
+            this.button3.Size = new System.Drawing.Size(34, 31);
             this.button3.TabIndex = 4;
-            this.button3.Text = "Clear List";
+            this.button3.Text = "⟲";
             this.button3.UseVisualStyleBackColor = true;
             this.button3.Click += new System.EventHandler(this.button3_Click);
             // 
@@ -125,16 +129,17 @@
             // 
             // checkBox1
             // 
-            this.checkBox1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.checkBox1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.checkBox1.AutoSize = true;
+            this.checkBox1.BackColor = System.Drawing.Color.White;
             this.checkBox1.Checked = true;
             this.checkBox1.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.checkBox1.Location = new System.Drawing.Point(535, 417);
+            this.checkBox1.Location = new System.Drawing.Point(646, 20);
             this.checkBox1.Name = "checkBox1";
             this.checkBox1.Size = new System.Drawing.Size(92, 17);
             this.checkBox1.TabIndex = 8;
             this.checkBox1.Text = "Always on top";
-            this.checkBox1.UseVisualStyleBackColor = true;
+            this.checkBox1.UseVisualStyleBackColor = false;
             this.checkBox1.CheckedChanged += new System.EventHandler(this.checkBox1_CheckedChanged);
             // 
             // chromiumWebBrowser1
@@ -146,7 +151,33 @@
             this.chromiumWebBrowser1.Name = "chromiumWebBrowser1";
             this.chromiumWebBrowser1.Size = new System.Drawing.Size(793, 446);
             this.chromiumWebBrowser1.TabIndex = 10;
-            this.chromiumWebBrowser1.Visible = false;
+            this.chromiumWebBrowser1.Visible = false;            
+            // 
+            // button6
+            // 
+            this.button6.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.button6.Location = new System.Drawing.Point(753, 12);
+            this.button6.Name = "button6";
+            this.button6.Size = new System.Drawing.Size(34, 31);
+            this.button6.TabIndex = 11;
+            this.button6.Text = "▲";
+            this.button6.UseVisualStyleBackColor = true;
+            this.button6.Click += new System.EventHandler(this.button6_Click);
+            // 
+            // button7
+            // 
+            this.button7.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.button7.Location = new System.Drawing.Point(753, 41);
+            this.button7.Name = "button7";
+            this.button7.Size = new System.Drawing.Size(34, 31);
+            this.button7.TabIndex = 12;
+            this.button7.Text = "▼";
+            this.button7.UseVisualStyleBackColor = true;
+            this.button7.Click += new System.EventHandler(this.button7_Click);
+            // 
+            // timer1
+            // 
+            this.timer1.Tick += new System.EventHandler(this.timer1_Tick);
             // 
             // Form1
             // 
@@ -155,6 +186,8 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.Gray;
             this.ClientSize = new System.Drawing.Size(793, 446);
+            this.Controls.Add(this.button7);
+            this.Controls.Add(this.button6);
             this.Controls.Add(this.button5);
             this.Controls.Add(this.button4);
             this.Controls.Add(this.button3);
@@ -188,6 +221,9 @@
         private System.Windows.Forms.Button button5;
         private System.Windows.Forms.CheckBox checkBox1;
         private CefSharp.WinForms.ChromiumWebBrowser chromiumWebBrowser1;
+        private System.Windows.Forms.Button button6;
+        private System.Windows.Forms.Button button7;
+        private System.Windows.Forms.Timer timer1;
     }
 }
 
