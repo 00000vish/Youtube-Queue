@@ -23,7 +23,7 @@ namespace YoutubeQ
         {
             InitializeComponent();
             var settings = new CefSettings();
-            settings.CefCommandLineArgs.Add("disable-gpu", "1"); //since geforce experice this i am gaming LUL
+            settings.CefCommandLineArgs.Add("disable-gpu", "1"); //since geforce experice think i am gaming LUL
             settings.CefCommandLineArgs["autoplay-policy"] = "no-user-gesture-required";
             settings.CefCommandLineArgs.Add("enable-media-stream", "1");
             settings.CefCommandLineArgs["autoplay-policy"] = "no-user-gesture-required";
