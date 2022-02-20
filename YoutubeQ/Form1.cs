@@ -30,37 +30,25 @@ namespace YoutubeQ
             Cef.Initialize(settings);     
         }
 
-        public void nowPlaying()
+        public void isPlaying(bool status)
         {
-            playing = true;
-            chromiumWebBrowser1.Visible = true;
-            button4.Visible = true;
-            button5.Visible = true;
-            button6.Visible = false;
-            button7.Visible = false;
-            listView1.Visible = false;
-            button1.Visible = false;    
-            button2.Visible = false;    
-            button3.Visible = false;
-            checkBox1.Visible = false;  
-        }
-        public void stopPlaying()
-        {
-            timer1.Stop();
-            button6.Visible = true;
-            button7.Visible = true;
-            button4.Visible = false;
-            button5.Visible = false;
-            listView1.Visible = true;
-            button1.Visible = true;
-            button2.Visible = true;
-            button3.Visible = true;
-            checkBox1.Visible = true;
-            playing = false;
-            chromiumWebBrowser1.Load("about:blank");
-            chromiumWebBrowser1.Visible = false;
-        }
-        
+            playing = status;
+            chromiumWebBrowser1.Visible = status;
+            button4.Visible = status;
+            button5.Visible = status;
+            button6.Visible = !status;
+            button7.Visible = !status;
+            listView1.Visible = !status;
+            button1.Visible = !status;    
+            button2.Visible = !status;    
+            button3.Visible = !status;
+            checkBox1.Visible = !status;
+            if (!status)
+            {
+                timer1.Stop();
+                chromiumWebBrowser1.Load("about:blank");
+            }
+        }         
 
         private void Form1_DragDrop(object sender, DragEventArgs e)
         {
@@ -104,11 +92,10 @@ namespace YoutubeQ
 
         private void button1_Click(object sender, EventArgs e)
         {
-            chromiumWebBrowser1.Focus();
             writeLinks();
             if (listView1.Items.Count > 0)
             {
-                nowPlaying();
+                isPlaying(true);
                 YoutubeLink link = (YoutubeLink)listView1.Items[0].Tag;
                 timer1.Interval = link.getDuration();
                 timer1.Start();
@@ -154,7 +141,7 @@ namespace YoutubeQ
         private void button5_Click(object sender, EventArgs e)
         {
             writeLinks();
-            stopPlaying();
+            isPlaying(false);
         }
 
         private void button4_Click(object sender, EventArgs e)
@@ -163,13 +150,28 @@ namespace YoutubeQ
         }
 
         private void Form1_Load(object sender, EventArgs e)
-        {                    
+        {
+            setSizeAndLocation();
             readAllLink();
             chromiumWebBrowser1 = new CefSharp.WinForms.ChromiumWebBrowser("about:blank");
             chromiumWebBrowser1.Dock = DockStyle.Fill;
             chromiumWebBrowser1.BringToFront();            
             this.Controls.Add(chromiumWebBrowser1);
             chromiumWebBrowser1.Visible = false;
+        }
+
+        private void setSizeAndLocation()
+        {
+            if(Properties.Settings.Default.sizeX == -1 && Properties.Settings.Default.sizeY == -1 &&
+                Properties.Settings.Default.locX == -1 && Properties.Settings.Default.locY == -1)
+            {
+                saveLocation();
+            }
+            else
+            {
+                Location = new Point(Properties.Settings.Default.locX, Properties.Settings.Default.locY);
+                this.Size = new Size(Properties.Settings.Default.sizeX, Properties.Settings.Default.sizeY);           
+            }
         }
 
         private void writeLinks()
@@ -205,7 +207,6 @@ namespace YoutubeQ
                 listView1.Refresh();           
             }                             
         }
-
         private void button6_Click(object sender, EventArgs e)
         {
             try
@@ -235,7 +236,6 @@ namespace YoutubeQ
             }
             catch (Exception) { }
         }
-
         private void playNext()
         {
             if (listView1.Items.Count > 0)
@@ -249,17 +249,35 @@ namespace YoutubeQ
                 }
                 else
                 {
-                    stopPlaying();
+                    isPlaying(false);
                 }
             }
         }
-
         private void timer1_Tick(object sender, EventArgs e)
         {
             playNext();            
         }
-    }
 
+        private void Form1_AutoSizeChanged(object sender, EventArgs e)
+        {
+            saveLocation();
+        }
+
+        private void Form1_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            saveLocation();
+        }
+
+        private void saveLocation()
+        {
+            Properties.Settings.Default.locX = this.Location.X;
+            Properties.Settings.Default.locY = this.Location.Y;
+            Properties.Settings.Default.sizeX = this.Size.Width;
+            Properties.Settings.Default.sizeY = this.Size.Height;
+            Properties.Settings.Default.Save();
+        }
+
+    }
 
     public class YoutubeLink
     {
@@ -275,8 +293,7 @@ namespace YoutubeQ
             else
             {
                 url = urlstring;
-            }            
-            Clipboard.SetText(this.url);
+            }             
             title = generateTitle(this.url);
         }
         public string generateTitle(string link)
